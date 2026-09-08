@@ -191,11 +191,12 @@ bool DrmLeaseScreen::initialize(const std::string& connectorName, int rotation,
 
     auto& cfg = emuInstance->getMainWindow()->getWindowConfig();
     filter = cfg.GetBool("ScreenFilter");
+    swap = cfg.GetBool("ScreenSwap");
 
     layout.Setup(mode.hdisplay, mode.vdisplay,
                  screenLayout_Natural,
                  static_cast<ScreenRotation>(screenRotation),
-                 screenSizing_BotOnly,
+                 (screenSwap != 0) ? screenSizing_TopOnly : screenSizing_BotOnly, 
                  0,
                  cfg.GetBool("IntegerScaling"),
                  false,
@@ -207,7 +208,7 @@ bool DrmLeaseScreen::initialize(const std::string& connectorName, int rotation,
     {
         if (kinds[i] == 1)
             memcpy(screenMatrix, matrices[i], sizeof(screenMatrix));
-    }
+    }'
 
     if (!touchDevice.empty())
         touch = std::make_unique<DrmLeaseTouch>(*this, touchDevice);
