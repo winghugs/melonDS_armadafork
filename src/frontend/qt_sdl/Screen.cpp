@@ -160,6 +160,7 @@ void ScreenPanel::setupScreenLayout()
     // The bottom screen is on the leased panel.
     if (emuInstance->drmLeaseActive())
     {
+		// Check for screen swap config
 		if (screenSwap != 0)  
         {  
         	sizing = screenSizing_BottomOnly;
