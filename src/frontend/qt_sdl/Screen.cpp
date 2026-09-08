@@ -163,7 +163,7 @@ void ScreenPanel::setupScreenLayout()
 		// Check for screen swap config
 		if (screenSwap != 0)  
         {  
-        	sizing = screenSizing_BottomOnly;
+        	sizing = screenSizing_BotOnly;
         	layoutType = screenLayout_Natural;
         }
 		else
