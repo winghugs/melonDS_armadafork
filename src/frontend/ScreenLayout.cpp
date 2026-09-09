@@ -406,7 +406,14 @@ void ScreenLayout::Setup(int screenWidth, int screenHeight,
         float height = maxY - minY;
 
         float tx = (screenWidth/2) - (width/2) - minX;
-        float ty = (screenHeight/2) - (height/2) - minY;
+        //float ty = (screenHeight/2) - (height/2) - minY;
+        float ty;  
+            if (sizing == screenSizing_TopOnly)  
+                ty = -minY;
+            else if (sizing == screenSizing_BotOnly)  
+                ty = screenHeight - height - minY;
+            else  
+                ty = (screenHeight/2) - (height/2) - minY;
 
         M23_Translate(TopScreenMtx, tx, ty);
         M23_Translate(BotScreenMtx, tx, ty);
