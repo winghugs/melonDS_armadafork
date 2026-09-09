@@ -861,6 +861,7 @@ void MainWindow::createScreenPanel()
     connect(emuThread, SIGNAL(windowUpdate()), panel, SLOT(repaint()));
 
     connect(this, SIGNAL(screenLayoutChange()), panel, SLOT(onScreenLayoutChanged()));
+    drmLeaseLayout = emuInstance->drmLeaseActive();
     emit screenLayoutChange();
 }
 
@@ -2199,8 +2200,19 @@ void MainWindow::onScreenEmphasisToggled()
     emit screenLayoutChange();
 }
 
+void MainWindow::updateDrmLeaseLayout()
+{
+    bool active = emuInstance->drmLeaseActive();
+    if (active == drmLeaseLayout) return;
+
+    drmLeaseLayout = active;
+    emit screenLayoutChange();
+}
+
 void MainWindow::onEmuStart()
 {
+    updateDrmLeaseLayout();
+
     if (!hasMenu) return;
 
     for (int i = 1; i < 9; i++)
@@ -2226,6 +2238,8 @@ void MainWindow::onEmuStart()
 
 void MainWindow::onEmuStop()
 {
+    updateDrmLeaseLayout();
+
     if (!hasMenu) return;
 
     for (int i = 0; i < 9; i++)
@@ -2318,6 +2332,10 @@ void MainWindow::onUpdateVideoSettings(bool glchange)
 
     if (glchange)
     {
+        updateDrmLeaseLayout();
+        for (auto child: childwins)
+            child->updateDrmLeaseLayout();
+
         emuThread->emuUnpause();
     }
 }

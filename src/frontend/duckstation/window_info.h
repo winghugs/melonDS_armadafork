@@ -34,6 +34,9 @@ struct WindowInfo
   float surface_scale = 1.0f;
   SurfaceFormat surface_format = SurfaceFormat::RGB8;
 
+  // X11 only: try EGL before GLX, for consumers that need EGL images.
+  bool prefer_egl = false;
+
   // Needed for macOS.
 #ifdef __APPLE__
   void* surface_handle = nullptr;

@@ -5,9 +5,11 @@ on:
     branches:
       - master
       - ci/*
+      - drm-leasing
   pull_request:
     branches:
       - master
+  workflow_dispatch:
 
 env:
   MELONDS_GIT_BRANCH: ${{ github.ref }}
@@ -28,6 +30,8 @@ jobs:
 
     name: ${{ matrix.arch.name }}
     runs-on: ${{ matrix.arch.runner }}
+    permissions:
+      contents: write
 
     steps:
     - uses: actions/checkout@v6
@@ -36,7 +40,8 @@ jobs:
       run: |
         sudo apt update
         sudo apt install --allow-downgrades cmake ninja-build extra-cmake-modules libpcap0.8-dev libsdl2-dev libenet-dev \
-          qt6-{base,base-private,multimedia}-dev qt6-wayland libqt6svg6-dev libarchive-dev libzstd-dev libfuse2 libfaad-dev
+          qt6-{base,base-private,multimedia}-dev qt6-wayland libqt6svg6-dev libarchive-dev libzstd-dev libfuse2 libfaad-dev \
+          libdrm-dev libgbm-dev libwayland-dev libwayland-bin
     - name: Configure
       run: cmake -B build -G Ninja -DCMAKE_INSTALL_PREFIX=/usr -DMELONDS_EMBED_BUILD_INFO=ON
     - name: Build
@@ -64,3 +69,31 @@ jobs:
         name: melonDS-appimage-${{ matrix.arch.name }}
         path: melonDS*.AppImage
         archive: false
+    - name: Publish DRM leasing prerelease
+      if: matrix.arch.name == 'aarch64' && github.ref == 'refs/heads/drm-leasing' && github.event_name != 'pull_request'
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+        RELEASE_TAG: drm-leasing
+        RELEASE_TITLE: melonDS DRM Leasing (ARM64)
+        RELEASE_NOTES: Built from ${{ github.repository }} at ${{ github.sha }}.
+      run: |
+        if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+          gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name' |
+            while IFS= read -r asset; do
+              gh release delete-asset "$RELEASE_TAG" "$asset" --yes
+            done
+          gh release edit "$RELEASE_TAG" \
+            --title "$RELEASE_TITLE" \
+            --notes "$RELEASE_NOTES" \
+            --prerelease \
+            --latest=false
+        else
+          gh release create "$RELEASE_TAG" \
+            --title "$RELEASE_TITLE" \
+            --notes "$RELEASE_NOTES" \
+            --prerelease \
+            --latest=false \
+            --target "$GITHUB_SHA"
+        fi
+        gh release upload "$RELEASE_TAG" melonDS-aarch64.AppImage

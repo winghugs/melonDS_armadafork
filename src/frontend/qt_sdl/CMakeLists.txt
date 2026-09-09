@@ -165,6 +165,55 @@ else()
     target_link_libraries(melonDS PRIVATE "${X11_LIBRARIES}" "${EGL_LIBRARIES}")
     target_include_directories(melonDS PRIVATE "${X11_INCLUDE_DIR}")
     add_compile_definitions(QAPPLICATION_CLASS=QApplication)
+
+    # Bottom screen on a DRM lease (drm-lease-v1 + KMS page flips + evdev touch).
+    # Requires wayland-client, wayland-scanner, libdrm and gbm.
+    option(ENABLE_DRM_LEASE "Enable DRM lease output for the bottom screen" ON)
+    if (ENABLE_DRM_LEASE)
+        pkg_check_modules(WAYLAND_CLIENT IMPORTED_TARGET wayland-client)
+        pkg_check_modules(LIBDRM IMPORTED_TARGET libdrm)
+        pkg_check_modules(GBM IMPORTED_TARGET gbm)
+        pkg_get_variable(WAYLAND_SCANNER wayland-scanner wayland_scanner)
+
+        if (WAYLAND_CLIENT_FOUND AND LIBDRM_FOUND AND GBM_FOUND AND WAYLAND_SCANNER)
+            # Vendored copy of the wayland-protocols staging XML so builds do not
+            # need wayland-protocols installed.
+            set(DRM_LEASE_XML "${CMAKE_CURRENT_SOURCE_DIR}/drm_lease/drm-lease-v1.xml")
+            set(DRM_LEASE_GEN_DIR "${CMAKE_CURRENT_BINARY_DIR}/drm_lease")
+            file(MAKE_DIRECTORY "${DRM_LEASE_GEN_DIR}")
+            add_custom_command(
+                OUTPUT "${DRM_LEASE_GEN_DIR}/drm-lease-v1-client-protocol.h"
+                       "${DRM_LEASE_GEN_DIR}/drm-lease-v1-protocol.c"
+                COMMAND "${WAYLAND_SCANNER}" client-header "${DRM_LEASE_XML}"
+                        "${DRM_LEASE_GEN_DIR}/drm-lease-v1-client-protocol.h"
+                COMMAND "${WAYLAND_SCANNER}" private-code "${DRM_LEASE_XML}"
+                        "${DRM_LEASE_GEN_DIR}/drm-lease-v1-protocol.c"
+                DEPENDS "${DRM_LEASE_XML}"
+                VERBATIM
+            )
+            add_library(drm_lease_protocol STATIC
+                "${DRM_LEASE_GEN_DIR}/drm-lease-v1-protocol.c"
+                "${DRM_LEASE_GEN_DIR}/drm-lease-v1-client-protocol.h"
+            )
+            target_link_libraries(drm_lease_protocol PRIVATE PkgConfig::WAYLAND_CLIENT)
+
+            target_sources(melonDS PRIVATE
+                drm_lease/DrmLeaseClient.cpp
+                drm_lease/DrmLeaseClient.h
+                drm_lease/DrmLeaseScreen.cpp
+                drm_lease/DrmLeaseScreen.h
+                drm_lease/DrmLeaseTouch.cpp
+                drm_lease/DrmLeaseTouch.h
+            )
+            target_include_directories(melonDS PRIVATE "${DRM_LEASE_GEN_DIR}")
+            target_link_libraries(melonDS PRIVATE drm_lease_protocol PkgConfig::WAYLAND_CLIENT
+                                                 PkgConfig::LIBDRM PkgConfig::GBM)
+            target_compile_definitions(melonDS PRIVATE ENABLE_DRM_LEASE)
+            message(STATUS "DRM lease secondary screen support enabled")
+        else()
+            message(STATUS "DRM lease secondary screen support disabled (missing wayland/libdrm/gbm)")
+        endif()
+    endif()
 endif()
 
 

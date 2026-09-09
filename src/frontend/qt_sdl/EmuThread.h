@@ -142,6 +142,7 @@ public:
 
 signals:
     void windowUpdate();
+    void drmLeaseChanged();
     void windowTitleChange(QString title);
 
     void windowEmuStart();

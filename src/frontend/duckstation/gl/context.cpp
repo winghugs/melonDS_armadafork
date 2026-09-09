@@ -72,9 +72,9 @@ std::unique_ptr<GL::Context> Context::Create(const WindowInfo& wi, const Version
   if (wi.type == WindowInfo::Type::X11)
   {
     const char* use_egl_x11 = std::getenv("USE_EGL_X11");
-    if (use_egl_x11 && std::strcmp(use_egl_x11, "1") == 0)
+    if (wi.prefer_egl || (use_egl_x11 && std::strcmp(use_egl_x11, "1") == 0))
       context = ContextEGLX11::Create(wi, versions_to_try, num_versions_to_try);
-    else
+    if (!context)
       context = ContextGLX::Create(wi, versions_to_try, num_versions_to_try);
   }
 

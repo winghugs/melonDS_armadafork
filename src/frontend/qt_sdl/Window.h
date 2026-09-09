@@ -102,6 +102,8 @@ signals:
     void screenLayoutChange();
 
 private slots:
+    void updateDrmLeaseLayout();
+
     void onOpenFile();
     void onClickRecentFile();
     void onClearRecentFiles();
@@ -206,6 +208,7 @@ private:
     bool showOSD;
 
     bool hasOGL;
+    bool drmLeaseLayout = false;
 
     bool pauseOnLostFocus;
     bool pausedManually;

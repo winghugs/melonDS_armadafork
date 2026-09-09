@@ -77,6 +77,7 @@ void EmuThread::attachWindow(MainWindow* window)
     connect(this, SIGNAL(autoScreenSizingChange(int)), window->panel, SLOT(onAutoScreenSizingChanged(int)));
     connect(this, SIGNAL(windowFullscreenToggle()), window, SLOT(onFullscreenToggled()));
     connect(this, SIGNAL(screenEmphasisToggle()), window, SLOT(onScreenEmphasisToggled()));
+    connect(this, SIGNAL(drmLeaseChanged()), window, SLOT(updateDrmLeaseLayout()));
 
     if (window->winHasMenu())
     {
@@ -95,6 +96,7 @@ void EmuThread::detachWindow(MainWindow* window)
     disconnect(this, SIGNAL(autoScreenSizingChange(int)), window->panel, SLOT(onAutoScreenSizingChanged(int)));
     disconnect(this, SIGNAL(windowFullscreenToggle()), window, SLOT(onFullscreenToggled()));
     disconnect(this, SIGNAL(screenEmphasisToggle()), window, SLOT(onScreenEmphasisToggled()));
+    disconnect(this, SIGNAL(drmLeaseChanged()), window, SLOT(updateDrmLeaseLayout()));
 
     if (window->winHasMenu())
     {
@@ -442,6 +444,9 @@ void EmuThread::run()
             emuInstance->drawScreen();
         }
 
+        if (emuInstance->drmLeaseReap())
+            emit drmLeaseChanged();
+
         handleMessages();
     }
 }
@@ -480,6 +485,7 @@ void EmuThread::handleMessages()
             emuStatus = emuStatus_Exit;
             emuPauseStack = emuPauseStackRunning;
 
+            emuInstance->drmLeaseDetach();
             emuInstance->audioDisable();
             MPInterface::Get().End(emuInstance->instanceID);
             break;
@@ -490,6 +496,8 @@ void EmuThread::handleMessages()
             emuActive = true;
 
             emuInstance->audioEnable();
+            if (useOpenGL)
+                emuInstance->drmLeaseAttach();
             emit windowEmuStart();
             break;
 
@@ -530,6 +538,7 @@ void EmuThread::handleMessages()
             emuStatus = emuStatus_Paused;
             emuActive = false;
 
+            emuInstance->drmLeaseDetach();
             emuInstance->audioDisable();
             emit windowEmuStop();
             break;

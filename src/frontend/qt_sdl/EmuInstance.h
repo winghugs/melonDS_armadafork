@@ -19,6 +19,7 @@
 #ifndef EMUINSTANCE_H
 #define EMUINSTANCE_H
 
+#include <atomic>
 #include <SDL2/SDL.h>
 
 #include "Platform.h"
@@ -28,6 +29,8 @@
 #include "Window.h"
 #include "Config.h"
 #include "SaveManager.h"
+
+class DrmLeaseScreen;
 
 const int kMaxWindows = 4;
 
@@ -124,6 +127,14 @@ public:
     void releaseGL();
 
     void drawScreen();
+
+    // Bottom screen on a leased DRM connector; emu thread only.
+    void drmLeaseAttach();
+    void drmLeaseDetach();
+    // Detaches a lease the compositor revoked or that stopped presenting;
+    // true when it did.
+    bool drmLeaseReap();
+    bool drmLeaseActive() { return drmLeaseActiveFlag; }
 
     // return: empty string = setup OK, non-empty = error message
     QString verifySetup();
@@ -270,6 +281,11 @@ private:
     MainWindow* mainWindow;
     MainWindow* windowList[kMaxWindows];
     int numWindows;
+
+#ifdef ENABLE_DRM_LEASE
+    std::unique_ptr<DrmLeaseScreen> drmLeaseScreen;
+#endif
+    std::atomic<bool> drmLeaseActiveFlag{false};
 
     Config::Table globalCfg;
     Config::Table localCfg;

@@ -49,6 +49,9 @@
 #include "main.h"
 
 #include "NDSCart/CartSD.h"
+#ifdef ENABLE_DRM_LEASE
+#include "drm_lease/DrmLeaseScreen.h"
+#endif
 
 using std::make_unique;
 using std::pair;
@@ -384,10 +387,17 @@ void EmuInstance::initOpenGL(int win)
         windowList[win]->initOpenGL();
 
     setVSyncGL(true);
+
+    if (win == 0 && emuThread->emuIsActive())
+        drmLeaseAttach();
 }
 
 void EmuInstance::deinitOpenGL(int win)
 {
+    // The leased output's GL objects live in the main window's context.
+    if (win == 0)
+        drmLeaseDetach();
+
     if (windowList[win])
         windowList[win]->deinitOpenGL();
 }
@@ -431,6 +441,71 @@ void EmuInstance::drawScreen()
         if (windowList[i])
             windowList[i]->drawScreen();
     }
+#ifdef ENABLE_DRM_LEASE
+    if (drmLeaseScreen)
+        drmLeaseScreen->drawScreen();
+#endif
+}
+
+void EmuInstance::drmLeaseAttach()
+{
+#ifdef ENABLE_DRM_LEASE
+    if (drmLeaseScreen || !DrmLeaseScreen::enabled())
+        return;
+    if (!mainWindow || !mainWindow->hasOpenGL())
+    {
+        Log(LogLevel::Info, "drm-lease: the OpenGL display is off, not using a leased output\n");
+        return;
+    }
+
+    const char* connector = getenv("MELONDS_DRM_LEASE_CONNECTOR");
+    const char* rotationEnv = getenv("MELONDS_DRM_LEASE_ROTATION");
+    const char* touchDevice = getenv("MELONDS_DRM_LEASE_TOUCH");
+    const bool explicitConnector = connector && connector[0] != '\0';
+    const int rotation = rotationEnv ? atoi(rotationEnv) : -1;
+
+    // Auto-selection takes internal panels only; naming a connector opts in to any type.
+    auto screen = std::make_unique<DrmLeaseScreen>(this);
+    if (!screen->initialize(explicitConnector ? connector : "", rotation,
+                            touchDevice ? touchDevice : "auto", !explicitConnector))
+    {
+        if (explicitConnector)
+            Log(LogLevel::Error, "drm-lease: connector '%s' unavailable, using the Qt window\n", connector);
+        return;
+    }
+
+    makeCurrentGL();
+    if (!screen->initOpenGL())
+        return;
+
+    drmLeaseScreen = std::move(screen);
+    drmLeaseActiveFlag = true;
+    Log(LogLevel::Info, "drm-lease: bottom screen routed to the leased output\n");
+#endif
+}
+
+bool EmuInstance::drmLeaseReap()
+{
+#ifdef ENABLE_DRM_LEASE
+    if (!drmLeaseScreen || !drmLeaseScreen->isDead())
+        return false;
+    drmLeaseDetach();
+    return true;
+#else
+    return false;
+#endif
+}
+
+void EmuInstance::drmLeaseDetach()
+{
+#ifdef ENABLE_DRM_LEASE
+    if (!drmLeaseScreen)
+        return;
+
+    drmLeaseActiveFlag = false;
+    makeCurrentGL();
+    drmLeaseScreen.reset();
+#endif
 }
 
 
