@@ -164,7 +164,7 @@ void ScreenPanel::setupScreenLayout()
 		if (screenSwap != 0)  
         {  
         	sizing = screenSizing_BotOnly;
-        	layoutType = screenLayout_Vertical;
+        	layoutType = screenLayout_Natural;
         }
 		else
 		{
