@@ -195,9 +195,9 @@ bool DrmLeaseScreen::initialize(const std::string& connectorName, int rotation,
     auto sizingMode = screenSwap ? screenSizing_BotOnly : screenSizing_TopOnly;
 
     layout.Setup(mode.hdisplay, mode.vdisplay,
-                 screenLayout_Vertical,
+                 screenLayout_Natural,
                  static_cast<ScreenRotation>(screenRotation),
-                 screenSizing_TopOnly,
+                 sizingMode,
                  0,
                  cfg.GetBool("IntegerScaling"),
                  false,
