@@ -87,7 +87,7 @@ out vec4 oColor;
 
 void main()
 {
-    vec4 pixel = texture(ScreenTex, vec3(fTexcoord, 1.0));
+    vec4 pixel = texture(ScreenTex, vec3(fTexcoord, 0.0));
 
     oColor = vec4(pixel.rgb, 1.0);
 }
