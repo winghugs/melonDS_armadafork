@@ -404,13 +404,15 @@ void ScreenLayout::Setup(int screenWidth, int screenHeight,
 
         float width = maxX - minX;
         float height = maxY - minY;
-
-        float tx = (screenWidth/2) - (width/2) - minX;
-        //float ty = (screenHeight/2) - (height/2) - minY;
-        float ty;  
+        
+        float tx;  
             if (sizing == screenSizing_TopOnly)  
-                ty = -minY;
-            else if (sizing == screenSizing_BotOnly)  
+                tx = screenWidth - width - minX;
+            else  
+                tx = (screenHeight/2) - (height/2) - minX;
+
+        float ty;  
+            if (sizing == screenSizing_BotOnly)  
                 ty = screenHeight - height - minY;
             else  
                 ty = (screenHeight/2) - (height/2) - minY;
