@@ -191,12 +191,12 @@ bool DrmLeaseScreen::initialize(const std::string& connectorName, int rotation,
 
     auto& cfg = emuInstance->getMainWindow()->getWindowConfig();
     filter = cfg.GetBool("ScreenFilter");
-    int screenSwap = cfg.GetBool("ScreenSwap");
+    swap = cfg.GetBool("ScreenSwap");
 
     layout.Setup(mode.hdisplay, mode.vdisplay,
                  screenLayout_Natural,
                  static_cast<ScreenRotation>(screenRotation),
-                 (screenSwap != 0) ? screenSizing_TopOnly : screenSizing_BotOnly, 
+                 swap ? screenSizing_BotOnly : screenSizing_TopOnly, 
                  0,
                  cfg.GetBool("IntegerScaling"),
                  false,
