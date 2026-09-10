@@ -405,17 +405,29 @@ void ScreenLayout::Setup(int screenWidth, int screenHeight,
         float width = maxX - minX;
         float height = maxY - minY;
         
-        float tx;  
+        float tx, ty;  
+        bool axesSwapped = (rotation == screenRot_90Deg || rotation == screenRot_270Deg);  
+          
+        if (!axesSwapped)  
+        {  
+            tx = (screenWidth/2) - (width/2) - minX;  
             if (sizing == screenSizing_TopOnly)  
-                tx = screenWidth - width - minX;
+                ty = -minY;                          // pin top  
+            else if (sizing == screenSizing_BotOnly)  
+                ty = screenHeight - height - minY;   // pin bottom  
             else  
-                tx = (screenHeight/2) - (height/2) - minX;
-
-        float ty;  
-            if (sizing == screenSizing_BotOnly)  
-                ty = screenHeight - height - minY;
+                ty = (screenHeight/2) - (height/2) - minY;  
+        }  
+        else  
+        {  
+            ty = (screenHeight/2) - (height/2) - minY;  
+            if (sizing == screenSizing_TopOnly)  
+                tx = -minX;                          // try this first  
+            else if (sizing == screenSizing_BotOnly)  
+                tx = screenWidth - width - minX;     // opposite edge  
             else  
-                ty = (screenHeight/2) - (height/2) - minY;
+                tx = (screenWidth/2) - (width/2) - minX;  
+        }  
 
         M23_Translate(TopScreenMtx, tx, ty);
         M23_Translate(BotScreenMtx, tx, ty);
