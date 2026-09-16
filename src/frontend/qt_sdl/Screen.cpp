@@ -1004,6 +1004,17 @@ void ScreenPanelGL::initOpenGL()
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA, 256, 192, 2, 0, GL_BGRA, GL_UNSIGNED_BYTE, nullptr);
 
+	glGenTextures(1, &downscaleTex);  
+	glBindTexture(GL_TEXTURE_2D_ARRAY, downscaleTex);  
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);  
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);  
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);  
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);  
+	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA, 256, 192, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);  
+	  
+	glGenFramebuffers(1, &downscaleFBO);  
+	glGenFramebuffers(1, &extractFBO);
+
 
     OpenGL::CompileVertexFragmentProgram(osdShader,
                                          kScreenVS_OSD, kScreenFS_OSD,
@@ -1125,6 +1136,9 @@ void ScreenPanelGL::deinitOpenGL()
     shaderManager.reset();
 
     glDeleteTextures(1, &screenTexture);
+	glDeleteTextures(1, &downscaleTex);  
+	glDeleteFramebuffers(1, &downscaleFBO);  
+	glDeleteFramebuffers(1, &extractFBO);
 
     glDeleteVertexArrays(1, &screenVertexArray);
     glDeleteBuffers(1, &screenVertexBuffer);
@@ -1242,6 +1256,28 @@ void ScreenPanelGL::drawScreen()
         else
         {
             rawTex = *(GLuint*)topbuf;
+			glBindTexture(GL_TEXTURE_2D_ARRAY, rawTex);  
+		    GLint actualW = 256, actualH = 192;  
+		    glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_WIDTH, &actualW);  
+		    glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_HEIGHT, &actualH);  
+		  
+		    if (actualW != 256 || actualH != 192)  
+		    {  
+		        for (int layer = 0; layer < 2; ++layer)  
+		        {  
+		            glBindFramebuffer(GL_READ_FRAMEBUFFER, extractFBO);  
+		            glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, rawTex, 0, layer);  
+		  
+		            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, downscaleFBO);  
+		            glFramebufferTextureLayer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, downscaleTex, 0, layer);  
+		  
+		            glBlitFramebuffer(0, 0, actualW, actualH,  
+		                               0, 0, 256, 192,  
+		                               GL_COLOR_BUFFER_BIT, GL_LINEAR);  
+		        }  
+		        glBindFramebuffer(GL_FRAMEBUFFER, 0);  
+		  
+		        rawTex = downscaleTex;  
         }
 
         GLuint finalTex = rawTex;
