@@ -226,6 +226,13 @@ private:
 
     GLuint screenVertexBuffer, screenVertexArray;
     GLuint screenTexture;
+    GLuint screenVertexBuffer, screenVertexArray;  
+    GLuint screenTexture;  
+    GLuint downscaleTex = 0;  
+    GLuint downscaleFBO = 0;  
+    GLuint extractFBO = 0;  
+    GLuint screenShaderProgram;  
+    GLint screenShaderTransformULoc, screenShaderScreenSizeULoc;
     GLuint screenShaderProgram;
     GLint screenShaderTransformULoc, screenShaderScreenSizeULoc;
 
