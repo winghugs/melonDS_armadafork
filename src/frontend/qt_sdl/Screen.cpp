@@ -1278,7 +1278,8 @@ void ScreenPanelGL::drawScreen()
 		        glBindFramebuffer(GL_FRAMEBUFFER, 0);  
 		  
 		        rawTex = downscaleTex;  
-        }
+        	}
+		}
 
         GLuint finalTex = rawTex;
         int outW = 256, outH = 192;
