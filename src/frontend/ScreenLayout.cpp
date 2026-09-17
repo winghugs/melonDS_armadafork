@@ -421,9 +421,9 @@ void ScreenLayout::Setup(int screenWidth, int screenHeight,
         else  
         {  
             ty = (screenHeight/2) - (height/2) - minY;  
-            if (sizing == screenSizing_BotOnly)  
+            if (sizing == screenSizing_TopOnly)  
                 tx = -minX;                          
-            else if (sizing == screenSizing_TopOnly)  
+            else if (sizing == screenSizing_BotOnly)  
                 tx = screenWidth - width - minX;     
             else  
                 tx = (screenWidth/2) - (width/2) - minX;  
