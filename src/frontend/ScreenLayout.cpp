@@ -414,7 +414,7 @@ void ScreenLayout::Setup(int screenWidth, int screenHeight,
             if (sizing == screenSizing_BotOnly)  
                 ty = -minY;                            
             else if (sizing == screenSizing_TopOnly)  
-                ty = screenHeight - height - minY;   /
+                ty = screenHeight - height - minY;
             else  
                 ty = (screenHeight/2) - (height/2) - minY;  
         }  
