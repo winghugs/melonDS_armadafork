@@ -411,20 +411,20 @@ void ScreenLayout::Setup(int screenWidth, int screenHeight,
         if (!axesSwapped)  
         {  
             tx = (screenWidth/2) - (width/2) - minX;  
-            if (sizing == screenSizing_TopOnly)  
-                ty = -minY;                          // pin top  
-            else if (sizing == screenSizing_BotOnly)  
-                ty = screenHeight - height - minY;   // pin bottom  
+            if (sizing == screenSizing_BotOnly)  
+                ty = -minY;                            
+            else if (sizing == screenSizing_TopOnly)  
+                ty = screenHeight - height - minY;   /
             else  
                 ty = (screenHeight/2) - (height/2) - minY;  
         }  
         else  
         {  
             ty = (screenHeight/2) - (height/2) - minY;  
-            if (sizing == screenSizing_TopOnly)  
-                tx = -minX;                          // try this first  
-            else if (sizing == screenSizing_BotOnly)  
-                tx = screenWidth - width - minX;     // opposite edge  
+            if (sizing == screenSizing_BotOnly)  
+                tx = -minX;                          
+            else if (sizing == screenSizing_TopOnly)  
+                tx = screenWidth - width - minX;     
             else  
                 tx = (screenWidth/2) - (width/2) - minX;  
         }  
